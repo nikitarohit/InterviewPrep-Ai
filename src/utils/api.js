@@ -1,4 +1,4 @@
-const BASE = "/api";
+const BASE = "https://interviewprep-ai-yjxt.onrender.com/api";
 
 function getToken() {
   return localStorage.getItem("token");
