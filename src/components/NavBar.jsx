@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
+import SideBar, { SideBarToggle } from './SideBar.jsx';
 
 const links = [
   { to: '/', label: 'Home' },
@@ -9,12 +10,15 @@ const links = [
   { to: '/notes', label: 'Notes' },
   { to: '/profile', label: 'Profile' },
   { to: '/result', label: 'Results' },
+  { to: '/settings', label: 'Settings' }, // FIX: was missing from mobile menu
 ];
 
 export default function NavBar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // FIX: drawer state for logged-in users
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
+  const { user } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -22,13 +26,15 @@ export default function NavBar() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Close mobile menu on route change
-  useEffect(() => setMenuOpen(false), [location.pathname]);
+  // Close mobile menus on route change
+  useEffect(() => {
+    setMenuOpen(false);
+    setSidebarOpen(false);
+  }, [location.pathname]);
 
   const isActive = (to) =>
     to === '/' ? location.pathname === '/' : location.pathname.startsWith(to);
-  const { user } = useAuth();
-  // Only show Start Free on the landing page and when user is not logged in
+
   const showStartFree = location.pathname === '/' && !user;
 
   return (
@@ -46,13 +52,20 @@ export default function NavBar() {
       >
         <div style={{
           maxWidth: 1160, margin: '0 auto',
-          padding: '0 28px',
+          padding: '0 16px',
           height: 64,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
 
+          {/* Mobile sidebar toggle — only for logged-in users, shows on left */}
+          {user && (
+            <div className="nav-sidebar-toggle" style={{ display: 'none', marginRight: 10 }}>
+              <SideBarToggle open={sidebarOpen} onToggle={() => setSidebarOpen((o) => !o)} />
+            </div>
+          )}
+
           {/* ── Logo ── */}
-          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
             <div style={{
               width: 36, height: 36, borderRadius: 10,
               background: 'linear-gradient(135deg, #6b5cf6 0%, #a78bfa 100%)',
@@ -64,7 +77,7 @@ export default function NavBar() {
             </div>
             <span style={{
               fontSize: 16, fontWeight: 700, color: '#1a1a2e',
-              letterSpacing: '-0.02em',
+              letterSpacing: '-0.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
             }}>
               InterviewPrep <span style={{
                 background: 'linear-gradient(130deg, #6b5cf6, #a78bfa)',
@@ -75,7 +88,7 @@ export default function NavBar() {
 
           {/* ── Desktop links ── */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }} className="nav-desktop">
-            {links.map(({ to, label }) => {
+            {links.filter(l => l.to !== '/settings').map(({ to, label }) => {
               const active = isActive(to);
               return (
                 <Link
@@ -90,69 +103,45 @@ export default function NavBar() {
                     textDecoration: 'none',
                     transition: 'all 0.18s',
                   }}
-                  onMouseEnter={e => {
-                    if (!active) {
-                      e.currentTarget.style.background = '#f7f5ff';
-                      e.currentTarget.style.color = '#6b5cf6';
-                    }
-                  }}
-                  onMouseLeave={e => {
-                    if (!active) {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = '#5a5a7a';
-                    }
-                  }}
+                  onMouseEnter={e => { if (!active) { e.currentTarget.style.background = '#f7f5ff'; e.currentTarget.style.color = '#6b5cf6'; } }}
+                  onMouseLeave={e => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#5a5a7a'; } }}
                 >
                   {label}
                   {active && (
-                    <motion.div
-                      layoutId="nav-pill"
-                      style={{
-                        position: 'absolute', inset: 0, borderRadius: 10,
-                        background: '#f0edff', zIndex: -1,
-                      }}
-                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                    />
+                    <motion.div layoutId="nav-pill" style={{ position: 'absolute', inset: 0, borderRadius: 10, background: '#f0edff', zIndex: -1 }} transition={{ type: 'spring', stiffness: 380, damping: 30 }} />
                   )}
                 </Link>
               );
             })}
 
-            {/* CTA button */}
             {showStartFree && (
-            <motion.button
-              whileHover={{ scale: 1.04, boxShadow: '0 6px 20px rgba(107,92,246,0.28)' }}
-              whileTap={{ scale: 0.97 }}
-              style={{
-                marginLeft: 8,
-                padding: '8px 18px', borderRadius: 12, border: 'none',
-                background: 'linear-gradient(135deg, #6b5cf6, #7c6df7)',
-                color: '#fff', fontWeight: 600, fontSize: 13.5,
-                cursor: 'pointer',
-                boxShadow: '0 3px 12px rgba(107,92,246,0.22)',
-              }}
-            >
-              Start Free →
-            </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.04, boxShadow: '0 6px 20px rgba(107,92,246,0.28)' }}
+                whileTap={{ scale: 0.97 }}
+                style={{
+                  marginLeft: 8, padding: '8px 18px', borderRadius: 12, border: 'none',
+                  background: 'linear-gradient(135deg, #6b5cf6, #7c6df7)',
+                  color: '#fff', fontWeight: 600, fontSize: 13.5, cursor: 'pointer',
+                  boxShadow: '0 3px 12px rgba(107,92,246,0.22)',
+                }}
+              >
+                Start Free →
+              </motion.button>
             )}
           </div>
 
-          {/* ── Hamburger ── */}
+          {/* ── Hamburger (fallback nav for mobile, includes Settings) ── */}
           <button
             onClick={() => setMenuOpen(o => !o)}
             className="nav-hamburger"
-            style={{
-              display: 'none',
-              background: 'none', border: 'none', cursor: 'pointer',
-              padding: 6, borderRadius: 8, color: '#5a5a7a',
-            }}
+            style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', padding: 6, borderRadius: 8, color: '#5a5a7a', marginLeft: 8 }}
             aria-label="Toggle menu"
           >
             <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
               {menuOpen ? (
-                <path d="M5 5l12 12M17 5L5 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                <path d="M5 5l12 12M17 5L5 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
               ) : (
-                <path d="M3 6h16M3 11h16M3 16h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                <path d="M3 6h16M3 11h16M3 16h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
               )}
             </svg>
           </button>
@@ -160,32 +149,30 @@ export default function NavBar() {
         </div>
       </nav>
 
-      {/* ── Mobile menu ── */}
+      {/* ── Mobile sidebar drawer (logged-in users) — Settings lives here too ── */}
+      {user && <SideBar mobileOpen={sidebarOpen} onMobileClose={() => setSidebarOpen(false)} />}
+
+      {/* ── Mobile hamburger menu (works for everyone, logged in or not) ── */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
+            initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
             style={{
               position: 'fixed', top: 64, left: 0, right: 0, zIndex: 49,
               background: 'rgba(250,250,248,0.96)',
               backdropFilter: 'blur(16px)',
               borderBottom: '1px solid #ece8f5',
-              padding: '12px 20px 20px',
+              padding: '12px 16px 20px',
               boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+              maxHeight: 'calc(100vh - 64px)',
+              overflowY: 'auto',
             }}
           >
-            {links.map(({ to, label }, i) => {
+            {(user ? links : links.filter(l => l.to !== '/settings' && l.to !== '/notes' && l.to !== '/profile' && l.to !== '/result' && l.to !== '/dashboard')).map(({ to, label }, i) => {
               const active = isActive(to);
               return (
-                <motion.div
-                  key={to}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                >
+                <motion.div key={to} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}>
                   <Link
                     to={to}
                     style={{
@@ -203,15 +190,11 @@ export default function NavBar() {
               );
             })}
             {showStartFree && (
-            <div style={{ marginTop: 8, paddingTop: 12, borderTop: '1px solid #ede9f5' }}>
-              <button style={{
-                width: '100%', padding: '12px', borderRadius: 12, border: 'none',
-                background: 'linear-gradient(135deg, #6b5cf6, #7c6df7)',
-                color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer',
-              }}>
-                Start Free →
-              </button>
-            </div>
+              <div style={{ marginTop: 8, paddingTop: 12, borderTop: '1px solid #ede9f5' }}>
+                <button style={{ width: '100%', padding: '12px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #6b5cf6, #7c6df7)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+                  Start Free →
+                </button>
+              </div>
             )}
           </motion.div>
         )}
@@ -221,6 +204,7 @@ export default function NavBar() {
         @media (max-width: 768px) {
           .nav-desktop { display: none !important; }
           .nav-hamburger { display: flex !important; }
+          .nav-sidebar-toggle { display: none !important; } /* sidebar toggle replaced by hamburger which now includes Settings */
         }
       `}</style>
     </>

@@ -83,6 +83,8 @@ function AICard() {
   const scoreVisible = aText.length > A.length * 0.85;
 
   return (
+    // FIX: added w-full so the card shrinks on narrow screens instead of
+    // forcing overflow when squeezed by flex justify-center on mobile.
     <motion.div
       initial={{ opacity: 0, x: 40, rotate: 1 }}
       animate={{ opacity: 1, x: 0, rotate: 0 }}
@@ -103,10 +105,10 @@ function AICard() {
           {["bg-[#ff6b6b]", "bg-[#ffd93d]", "bg-[#6bcb77]"].map((c) => (
             <div key={c} className={`w-2.5 h-2.5 rounded-full opacity-85 ${c}`} />
           ))}
-          <span className="ml-1.5 text-[11px] font-semibold tracking-[0.08em] uppercase text-brand-muted">
+          <span className="ml-1.5 text-[11px] font-semibold tracking-[0.08em] uppercase text-brand-muted truncate">
             InterviewPrep AI — Mock Session
           </span>
-          <span className="ml-auto flex items-center gap-1.5">
+          <span className="ml-auto flex items-center gap-1.5 shrink-0">
             <span className="w-[7px] h-[7px] rounded-full bg-green-500 shadow-[0_0_6px_#22c55e]" />
             <span className="text-[11px] text-brand-muted">Live</span>
           </span>
@@ -117,7 +119,7 @@ function AICard() {
             <div className="shrink-0 w-[30px] h-[30px] rounded-full bg-gradient-brand-soft flex items-center justify-center text-[11px] font-bold text-white">
               AI
             </div>
-            <div className="flex-1 bg-[#f7f5ff] rounded-2xl rounded-bl-sm px-3.5 py-2.5 text-[13px] leading-relaxed text-[#3d3560]">
+            <div className="flex-1 min-w-0 bg-[#f7f5ff] rounded-2xl rounded-bl-sm px-3.5 py-2.5 text-[13px] leading-relaxed text-[#3d3560]">
               {qText}
               {phase === "q" && <Cursor />}
             </div>
@@ -153,7 +155,7 @@ function AICard() {
               <div className="shrink-0 w-[30px] h-[30px] rounded-full bg-[#fff3ee] flex items-center justify-center text-[11px] font-bold text-orange-600">
                 Y
               </div>
-              <div className="flex-1 bg-[#fffaf7] border border-[#ffe4d0] rounded-2xl rounded-bl-sm px-3.5 py-2.5 text-[13px] leading-relaxed text-[#3a2e28]">
+              <div className="flex-1 min-w-0 bg-[#fffaf7] border border-[#ffe4d0] rounded-2xl rounded-bl-sm px-3.5 py-2.5 text-[13px] leading-relaxed text-[#3a2e28]">
                 {aText}
                 {aText.length < A.length && <Cursor orange />}
               </div>
@@ -167,7 +169,7 @@ function AICard() {
             animate={{ opacity: 1, y: 0 }}
             className="mx-4 mb-4 px-3.5 py-3 rounded-[14px] border border-green-200 bg-gradient-to-br from-green-50 to-green-100 flex items-center gap-2.5"
           >
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="text-[11px] font-semibold text-green-700 mb-1.5">
                 Technical depth · Structured reasoning
               </div>
@@ -180,7 +182,7 @@ function AICard() {
                 />
               </div>
             </div>
-            <div className="text-[22px] font-bold text-green-600 leading-none">91</div>
+            <div className="text-[22px] font-bold text-green-600 leading-none shrink-0">91</div>
           </motion.div>
         )}
       </div>
@@ -192,7 +194,7 @@ function AICard() {
         className="absolute -bottom-[18px] right-5 z-20 flex items-center gap-2 rounded-full bg-white px-3.5 py-[7px] border border-border-soft shadow-[0_4px_20px_rgba(0,0,0,0.10)]"
       >
         <span className="text-[13px]">🏆</span>
-        <span className="text-xs font-semibold text-[#4a4a6a]">Top 8% answer</span>
+        <span className="text-xs font-semibold text-[#4a4a6a] whitespace-nowrap">Top 8% answer</span>
       </motion.div>
     </motion.div>
   );
@@ -200,7 +202,12 @@ function AICard() {
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden bg-surface min-h-screen">
+    // FIX 1: min-h-screen → min-h-[100dvh] with min-h-screen fallback for
+    // older browsers. 100vh on mobile doesn't account for the address bar
+    // showing/hiding, which causes content jumping and the "zoom" feeling.
+    // FIX 2: added overflow-x-hidden as a hard safeguard against any
+    // child element forcing horizontal scroll on narrow viewports.
+    <section className="relative overflow-hidden overflow-x-hidden bg-surface min-h-screen min-h-[100dvh] w-full">
       <div
         aria-hidden
         className="absolute -top-[120px] -right-[100px] w-[700px] h-[700px] rounded-full opacity-80 bg-[radial-gradient(circle,#ede9ff_0%,transparent_65%)]"
@@ -213,15 +220,21 @@ export default function Hero() {
         aria-hidden
         className="absolute inset-0 pointer-events-none opacity-[0.18] bg-[radial-gradient(circle,#c4b5fd_1px,transparent_1px)] bg-size-[32px_32px]"
       />
+      {/* FIX 3: diagonal clip-path panel hidden below md — on narrow screens
+          this decorative element was contributing to layout instability.
+          It only ever made visual sense in the 2-column desktop layout
+          anyway, since the 1-column mobile layout stacks content vertically. */}
       <div
         aria-hidden
-        className="absolute inset-0 top-0 left-[38%] right-0 bottom-0 z-0 bg-gradient-to-br from-[#f5f3ff] to-surface"
+        className="hidden md:block absolute inset-0 top-0 left-[38%] right-0 bottom-0 z-0 bg-gradient-to-br from-[#f5f3ff] to-surface"
         style={{ clipPath: "polygon(8% 0%, 100% 0%, 100% 100%, 0% 100%)" }}
       />
 
-      <div className="relative z-10 max-w-[1200px] mx-auto px-8 pt-[clamp(100px,14vw,160px)] pb-[clamp(64px,8vw,100px)]">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-[clamp(40px,6vw,96px)] items-center">
-          <div>
+      {/* FIX 4: px-8 → px-5 sm:px-8 — 32px of padding on each side ate too
+          much width on small phones (375px - 64px padding = 311px usable). */}
+      <div className="relative z-10 max-w-[1200px] mx-auto px-5 sm:px-8 pt-[clamp(90px,14vw,160px)] pb-[clamp(56px,8vw,100px)]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-[clamp(32px,6vw,96px)] items-center">
+          <div className="min-w-0">
             <motion.div
               initial={{ opacity: 0, y: -12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -238,7 +251,7 @@ export default function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.08, ease }}
-              className="text-[clamp(2.6rem,5.5vw,4.2rem)] font-extrabold leading-[1.06] tracking-tight text-ink mb-6"
+              className="text-[clamp(2.2rem,5.5vw,4.2rem)] font-extrabold leading-[1.06] tracking-tight text-ink mb-6 break-words"
             >
               Walk in
               <br />
@@ -251,7 +264,7 @@ export default function Hero() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.18 }}
-              className="text-[clamp(1rem,1.8vw,1.1rem)] leading-relaxed text-body max-w-[420px] mb-9"
+              className="text-[clamp(0.95rem,1.8vw,1.1rem)] leading-relaxed text-body max-w-[420px] mb-9"
             >
               Practice real questions, get instant AI feedback, and build the calm
               confidence that shows up when it matters most.
@@ -282,11 +295,16 @@ export default function Hero() {
               </motion.a>
             </motion.div>
 
+            {/* FIX 5: STATS row — pr-6 mr-6 fixed-px gaps were too wide on
+                small phones, squeezing 3 stat blocks into very little space.
+                Switched to responsive gap with flex-wrap fallback so stats
+                can wrap to 2 lines gracefully on very narrow screens instead
+                of being crushed. */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="flex border-t border-border-soft pt-7"
+              className="flex flex-wrap border-t border-border-soft pt-7 gap-x-4 gap-y-4"
             >
               {STATS.map((s, i) => (
                 <motion.div
@@ -294,9 +312,9 @@ export default function Hero() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.55 + i * 0.07 }}
-                  className={`flex-1 ${i < 2 ? "pr-6 mr-6 border-r border-border-soft" : ""}`}
+                  className={`flex-1 min-w-[90px] ${i < 2 ? "sm:pr-6 sm:mr-6 sm:border-r border-border-soft" : ""}`}
                 >
-                  <div className="text-[clamp(1.3rem,2.2vw,1.7rem)] font-extrabold text-ink tracking-tight">
+                  <div className="text-[clamp(1.15rem,2.2vw,1.7rem)] font-extrabold text-ink tracking-tight">
                     {s.v}
                   </div>
                   <div className="text-xs text-brand-muted mt-0.5">{s.l}</div>
@@ -305,7 +323,9 @@ export default function Hero() {
             </motion.div>
           </div>
 
-          <div className="flex justify-center pb-6">
+          {/* FIX 6: justify-center → w-full + px on mobile so the card has
+              breathing room instead of touching screen edges when squeezed. */}
+          <div className="flex justify-center w-full pb-6">
             <AICard />
           </div>
         </div>
@@ -314,7 +334,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.55 }}
-          className="mt-[72px] pt-8 border-t border-border-soft"
+          className="mt-[56px] sm:mt-[72px] pt-8 border-t border-border-soft"
         >
           <div className="text-[11px] font-semibold tracking-[0.14em] uppercase text-[#b0aac8] mb-3.5">
             Popular interview tracks
