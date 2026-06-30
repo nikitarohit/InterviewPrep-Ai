@@ -2,7 +2,11 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
-import SideBar, { SideBarToggle } from './SideBar.jsx';
+
+// FIX: removed SideBar import entirely — App.jsx already renders <SideBar />
+// once in Layout(). NavBar was rendering it a SECOND time, creating two
+// independent sidebar instances fighting over layout/stacking context.
+// That caused the "top area blank, only bottom sidebar works" bug.
 
 const links = [
   { to: '/', label: 'Home' },
@@ -10,12 +14,11 @@ const links = [
   { to: '/notes', label: 'Notes' },
   { to: '/profile', label: 'Profile' },
   { to: '/result', label: 'Results' },
-  { to: '/settings', label: 'Settings' }, // FIX: was missing from mobile menu
+  { to: '/settings', label: 'Settings' }, // kept — this fixes "Settings missing on mobile"
 ];
 
 export default function NavBar() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false); // FIX: drawer state for logged-in users
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const { user } = useAuth();
@@ -26,11 +29,7 @@ export default function NavBar() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Close mobile menus on route change
-  useEffect(() => {
-    setMenuOpen(false);
-    setSidebarOpen(false);
-  }, [location.pathname]);
+  useEffect(() => setMenuOpen(false), [location.pathname]);
 
   const isActive = (to) =>
     to === '/' ? location.pathname === '/' : location.pathname.startsWith(to);
@@ -57,13 +56,6 @@ export default function NavBar() {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
 
-          {/* Mobile sidebar toggle — only for logged-in users, shows on left */}
-          {user && (
-            <div className="nav-sidebar-toggle" style={{ display: 'none', marginRight: 10 }}>
-              <SideBarToggle open={sidebarOpen} onToggle={() => setSidebarOpen((o) => !o)} />
-            </div>
-          )}
-
           {/* ── Logo ── */}
           <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
             <div style={{
@@ -86,7 +78,7 @@ export default function NavBar() {
             </span>
           </Link>
 
-          {/* ── Desktop links ── */}
+          {/* ── Desktop links (Settings excluded — lives in sidebar on desktop) ── */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }} className="nav-desktop">
             {links.filter(l => l.to !== '/settings').map(({ to, label }) => {
               const active = isActive(to);
@@ -130,7 +122,7 @@ export default function NavBar() {
             )}
           </div>
 
-          {/* ── Hamburger (fallback nav for mobile, includes Settings) ── */}
+          {/* ── Hamburger — single mobile menu, includes Settings ── */}
           <button
             onClick={() => setMenuOpen(o => !o)}
             className="nav-hamburger"
@@ -149,10 +141,7 @@ export default function NavBar() {
         </div>
       </nav>
 
-      {/* ── Mobile sidebar drawer (logged-in users) — Settings lives here too ── */}
-      {user && <SideBar mobileOpen={sidebarOpen} onMobileClose={() => setSidebarOpen(false)} />}
-
-      {/* ── Mobile hamburger menu (works for everyone, logged in or not) ── */}
+      {/* ── Mobile hamburger menu — the ONLY mobile menu now (no second sidebar) ── */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
@@ -169,7 +158,7 @@ export default function NavBar() {
               overflowY: 'auto',
             }}
           >
-            {(user ? links : links.filter(l => l.to !== '/settings' && l.to !== '/notes' && l.to !== '/profile' && l.to !== '/result' && l.to !== '/dashboard')).map(({ to, label }, i) => {
+            {(user ? links : links.filter(l => ['/', '/dashboard'].includes(l.to))).map(({ to, label }, i) => {
               const active = isActive(to);
               return (
                 <motion.div key={to} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}>
@@ -204,7 +193,6 @@ export default function NavBar() {
         @media (max-width: 768px) {
           .nav-desktop { display: none !important; }
           .nav-hamburger { display: flex !important; }
-          .nav-sidebar-toggle { display: none !important; } /* sidebar toggle replaced by hamburger which now includes Settings */
         }
       `}</style>
     </>
