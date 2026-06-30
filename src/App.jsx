@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
 import NavBar from "./components/NavBar.jsx";
 import SideBar from "./components/SideBar.jsx";
@@ -22,14 +22,29 @@ function ProtectedRoute({ children }) {
   return user ? children : <Navigate to="/login" replace />;
 }
 
+// FIX: Home, Login, and Register are public marketing/auth pages —
+// they should NEVER show the app sidebar, even if the user happens to be
+// logged in. The sidebar belongs to the authenticated app shell
+// (Dashboard, Notes, Profile, Results, Settings) only.
+// Previously SideBar rendered on every route whenever `user` existed,
+// which caused the sidebar to appear on Home's long marketing scroll —
+// since Home's content is much taller/differently structured than the
+// sidebar's own height, this produced a visual "sidebar stuck at top,
+// blank space below" mismatch.
+const NO_SIDEBAR_ROUTES = ["/", "/login", "/register"];
+
 function Layout() {
   const { user } = useAuth();
+  const location = useLocation();
+
+  const showSidebar = user && !NO_SIDEBAR_ROUTES.includes(location.pathname);
+
   return (
     <>
       <NavBar />
       <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-        {user && <SideBar />}
-        <div style={{ flex: 1 }}>
+        {showSidebar && <SideBar />}
+        <div style={{ flex: 1, minWidth: 0 }}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />

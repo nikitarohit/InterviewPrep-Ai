@@ -107,18 +107,21 @@ export default function NavBar() {
             })}
 
             {showStartFree && (
-              <motion.button
-                whileHover={{ scale: 1.04, boxShadow: '0 6px 20px rgba(107,92,246,0.28)' }}
-                whileTap={{ scale: 0.97 }}
-                style={{
-                  marginLeft: 8, padding: '8px 18px', borderRadius: 12, border: 'none',
-                  background: 'linear-gradient(135deg, #6b5cf6, #7c6df7)',
-                  color: '#fff', fontWeight: 600, fontSize: 13.5, cursor: 'pointer',
-                  boxShadow: '0 3px 12px rgba(107,92,246,0.22)',
-                }}
-              >
-                Start Free →
-              </motion.button>
+              <Link to="/dashboard" style={{ textDecoration: 'none' }}>
+                <motion.span
+                  whileHover={{ scale: 1.04, boxShadow: '0 6px 20px rgba(107,92,246,0.28)' }}
+                  whileTap={{ scale: 0.97 }}
+                  style={{
+                    display: 'inline-block',
+                    marginLeft: 8, padding: '8px 18px', borderRadius: 12, border: 'none',
+                    background: 'linear-gradient(135deg, #6b5cf6, #7c6df7)',
+                    color: '#fff', fontWeight: 600, fontSize: 13.5, cursor: 'pointer',
+                    boxShadow: '0 3px 12px rgba(107,92,246,0.22)',
+                  }}
+                >
+                  Start Free →
+                </motion.span>
+              </Link>
             )}
           </div>
 
@@ -180,9 +183,11 @@ export default function NavBar() {
             })}
             {showStartFree && (
               <div style={{ marginTop: 8, paddingTop: 12, borderTop: '1px solid #ede9f5' }}>
-                <button style={{ width: '100%', padding: '12px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #6b5cf6, #7c6df7)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
-                  Start Free →
-                </button>
+                <Link to="/dashboard" style={{ textDecoration: 'none', display: 'block' }}>
+                  <button style={{ width: '100%', padding: '12px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #6b5cf6, #7c6df7)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+                    Start Free →
+                  </button>
+                </Link>
               </div>
             )}
           </motion.div>
