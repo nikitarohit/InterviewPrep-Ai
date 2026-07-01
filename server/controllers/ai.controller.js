@@ -21,9 +21,12 @@ export async function generate(req, res) {
     return res.json({ success: true, topic: cleanTopic, pack: MOCK_PACK, source: "mock" });
   }
 
+  // Get user's preferred language — fallback to Python
+  const preferredLanguage = req.user?.preferredLanguage || "Python";
+
   try {
-    console.log(`[AI] Generating content for topic: "${cleanTopic}"`);
-    const pack = await generateInterviewContent(cleanTopic);
+    console.log(`[AI] Generating content for topic: "${cleanTopic}" | lang: ${preferredLanguage}`);
+    const pack = await generateInterviewContent(cleanTopic, preferredLanguage);
     const source = pack._source || "gemini";
     const { _source, ...cleanPack } = pack;
     return res.json({ success: true, topic: cleanTopic, pack: cleanPack, source });
@@ -39,10 +42,6 @@ export async function generate(req, res) {
   }
 }
 
-// ── Alias exports so ai.routes.js keeps working without changes ───────────────
-// Your routes file imports { generateQuestions, explainTopic } — these map to `generate`
 export const generateQuestions = generate;
 export const explainTopic = generate;
-
-// Also export as default for any default-import usage
 export default { generate, generateQuestions, explainTopic };

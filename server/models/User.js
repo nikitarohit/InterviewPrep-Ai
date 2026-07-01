@@ -11,6 +11,11 @@ const userSchema = new mongoose.Schema(
     bio: { type: String, default: "" },
     streak: { type: Number, default: 0 },
     lastActiveDate: { type: Date, default: null },
+    preferredLanguage: {
+      type: String,
+      enum: ["Python", "JavaScript", "Java", "C++", "C#", "Go", "TypeScript"],
+      default: "Python",
+    },
   },
   { timestamps: true }
 );
