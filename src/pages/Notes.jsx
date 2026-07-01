@@ -67,6 +67,7 @@ function shapeNote(doc) {
     id: doc._id,
     title: doc.title,
     excerpt: doc.excerpt || doc.content?.substring(0, 120) || '',
+    content: doc.content || '',
     category: doc.category,
     pinned: doc.pinned || false,
     accent: ca.accent,
@@ -153,7 +154,7 @@ function NoteCard({ note, index, onDelete }) {
           ...(showFull ? {} : { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }),
           whiteSpace: 'pre-wrap',
         }}>
-          {note.excerpt}
+        {showFull ? (note.content || note.excerpt) : note.excerpt}
         </p>
         {showFull && (
           <p style={{ fontSize: 11, color: note.accent, fontWeight: 600, margin: '0 0 12px' }}>
