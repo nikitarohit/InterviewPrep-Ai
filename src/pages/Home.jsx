@@ -11,7 +11,7 @@ function Home() {
     <>
       <Hero />
       <Feature />
-      <Trusted />
+      {/*<Trusted />*/}
       <Stats /> 
       <PopularTopics />
       <AIPreview />
