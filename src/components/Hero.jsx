@@ -2,360 +2,493 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 
-const ease = [0.22, 1, 0.36, 1];
-
-const Q = "Walk me through how you'd design a rate limiter for a distributed system.";
-const A = `I'd start with token bucket — each user gets N tokens/sec, requests consume one. For distributed state, I'd use Redis with atomic INCR + TTL so all nodes share the same counter. Add a sliding window for smoother enforcement and fail-open on Redis timeout so a cache blip doesn't take down the API.`;
-
-const STATS = [
-  { v: "50k+", l: "Interviews practiced" },
-  { v: "94%", l: "Offer success rate" },
-  { v: "4.9★", l: "Average rating" },
-];
-
-const TRACKS = [
-  "Software Engineering",
-  "Product Management",
-  "Data Science",
-  "UX Design",
-  "Marketing",
-  "Finance",
-  "Consulting",
-  "Operations",
-];
-
+// ── Typewriter ────────────────────────────────────────────────────────────────
 function useTypewriter(text, speed = 26, delay = 0) {
   const [displayed, setDisplayed] = useState("");
   const [done, setDone] = useState(false);
   const reduced = useReducedMotion();
-
   useEffect(() => {
-    if (reduced) {
-      setDisplayed(text);
-      setDone(true);
-      return;
-    }
-    setDisplayed("");
-    setDone(false);
+    if (reduced) { setDisplayed(text); setDone(true); return; }
+    setDisplayed(""); setDone(false);
     let i = 0;
     const t = setTimeout(() => {
       const iv = setInterval(() => {
-        i++;
-        setDisplayed(text.slice(0, i));
-        if (i >= text.length) {
-          clearInterval(iv);
-          setDone(true);
-        }
+        i++; setDisplayed(text.slice(0, i));
+        if (i >= text.length) { clearInterval(iv); setDone(true); }
       }, speed);
       return () => clearInterval(iv);
     }, delay);
     return () => clearTimeout(t);
   }, [text, speed, delay, reduced]);
-
   return { displayed, done };
 }
 
-function Cursor({ orange = false }) {
-  return (
-    <span
-      className={`inline-block w-0.5 h-[0.85em] ml-0.5 align-middle animate-blink ${
-        orange ? "bg-orange-500" : "bg-violet-500"
-      }`}
-    />
-  );
-}
+const Q = "Walk me through how you'd design a rate limiter.";
+const A = `Start with token bucket — each user gets N tokens/sec, requests consume one. For distributed state, use Redis with atomic INCR + TTL so all nodes share the same counter. Add a sliding window for smoother enforcement and fail-open on Redis timeout.`;
 
-function AICard() {
+// ── Notebook Card ─────────────────────────────────────────────────────────────
+function NotebookCard() {
   const [phase, setPhase] = useState("q");
-  const { displayed: qText, done: qDone } = useTypewriter(Q, 20, 700);
-  const { displayed: aText } = useTypewriter(A, 14, phase === "a" ? 0 : 1e7);
+  const { displayed: qText, done: qDone } = useTypewriter(Q, 22, 600);
+  const { displayed: aText } = useTypewriter(A, 16, phase === "a" ? 0 : 1e7);
 
   useEffect(() => {
     if (!qDone) return;
-    const t1 = setTimeout(() => setPhase("thinking"), 300);
-    const t2 = setTimeout(() => setPhase("a"), 1400);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
+    const t1 = setTimeout(() => setPhase("thinking"), 400);
+    const t2 = setTimeout(() => setPhase("a"), 1500);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [qDone]);
 
   const scoreVisible = aText.length > A.length * 0.85;
 
   return (
-    // FIX: added w-full so the card shrinks on narrow screens instead of
-    // forcing overflow when squeezed by flex justify-center on mobile.
-    <motion.div
-      initial={{ opacity: 0, x: 40, rotate: 1 }}
-      animate={{ opacity: 1, x: 0, rotate: 0 }}
-      transition={{ duration: 0.8, delay: 0.35, ease }}
-      className="relative w-full max-w-[440px]"
-    >
-      <div
-        aria-hidden
-        className="absolute -inset-6 rounded-[40px] opacity-55 blur-[20px] -z-0"
-        style={{
-          background:
-            "conic-gradient(from 180deg at 50% 50%, #ede9ff 0deg, #fff7ed 120deg, #e0f2fe 240deg, #ede9ff 360deg)",
-        }}
-      />
-
-      <div className="relative z-10 overflow-hidden rounded-[28px] bg-white border border-violet-500/15 shadow-[0_0_0_1px_rgba(255,255,255,0.9)_inset,0_20px_60px_rgba(107,92,246,0.13),0_4px_16px_rgba(0,0,0,0.06)]">
-        <div className="flex items-center gap-2 px-[18px] py-3 bg-[#faf9ff] border-b border-[#f0edff]">
-          {["bg-[#ff6b6b]", "bg-[#ffd93d]", "bg-[#6bcb77]"].map((c) => (
-            <div key={c} className={`w-2.5 h-2.5 rounded-full opacity-85 ${c}`} />
+    <div style={{
+      position: "relative",
+      width: "100%",
+      maxWidth: 420,
+    }}>
+      {/* Notebook */}
+      <div style={{
+        background: "#f8f1e2",
+        borderRadius: "4px 14px 14px 4px",
+        boxShadow: "0 16px 48px -16px rgba(23,22,29,0.18), 0 2px 8px rgba(23,22,29,0.06)",
+        transform: "rotate(-0.8deg)",
+        padding: "28px 28px 24px 52px",
+        position: "relative",
+        backgroundImage: "repeating-linear-gradient(#e6dcc8 0 1px, transparent 1px 30px)",
+        backgroundPosition: "0 80px",
+        minHeight: 380,
+      }}>
+        {/* Spiral binding */}
+        <div style={{
+          position: "absolute", left: -12, top: 20, bottom: 20,
+          width: 24, display: "flex", flexDirection: "column",
+          justifyContent: "space-between",
+        }}>
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} style={{
+              width: 24, height: 13,
+              border: "2.2px solid #2b2b2b",
+              borderRadius: "50%",
+              background: "transparent",
+            }} />
           ))}
-          <span className="ml-1.5 text-[11px] font-semibold tracking-[0.08em] uppercase text-brand-muted truncate">
-            InterviewPrep AI — Mock Session
-          </span>
-          <span className="ml-auto flex items-center gap-1.5 shrink-0">
-            <span className="w-[7px] h-[7px] rounded-full bg-green-500 shadow-[0_0_6px_#22c55e]" />
-            <span className="text-[11px] text-brand-muted">Live</span>
-          </span>
         </div>
 
-        <div className="px-5 pt-5 pb-1">
-          <div className="flex gap-2.5 mb-4">
-            <div className="shrink-0 w-[30px] h-[30px] rounded-full bg-gradient-brand-soft flex items-center justify-center text-[11px] font-bold text-white">
-              AI
+        {/* Notebook title */}
+        <p style={{
+          fontFamily: "'Caveat', cursive",
+          fontSize: 20,
+          color: "#17161d",
+          margin: "0 0 20px",
+          fontWeight: 700,
+        }}>
+          <span style={{ background: "#e4defa", padding: "2px 8px", borderRadius: 3 }}>
+            Today's session
+          </span>
+        </p>
+
+        {/* Checklist */}
+        {[
+          { text: "Mock Interview", tag: "System Design", done: true },
+          { text: "Review AI Feedback", done: true },
+          { text: "Save to Notes", done: true },
+          { text: "Track Progress", done: false },
+        ].map((item, i) => (
+          <div key={i} style={{
+            display: "flex", alignItems: "center", gap: 10,
+            marginBottom: 12, fontFamily: "'Caveat', cursive",
+            fontSize: 17, color: "#17161d",
+          }}>
+            <div style={{
+              width: 16, height: 16, border: "2px solid #2b2b2b",
+              borderRadius: 3, flexShrink: 0,
+              background: item.done ? "#2b2b2b" : "transparent",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 10, color: "#f8f1e2", fontWeight: 700,
+            }}>
+              {item.done ? "✓" : ""}
             </div>
-            <div className="flex-1 min-w-0 bg-[#f7f5ff] rounded-2xl rounded-bl-sm px-3.5 py-2.5 text-[13px] leading-relaxed text-[#3d3560]">
+            {item.text}
+            {item.tag && (
+              <span style={{
+                fontFamily: "'Inter', sans-serif",
+                fontSize: 11, fontWeight: 600,
+                background: "#eeecfd", color: "#5b52e8",
+                padding: "2px 8px", borderRadius: 6,
+              }}>{item.tag}</span>
+            )}
+          </div>
+        ))}
+
+        {/* AI Q&A Card inside notebook */}
+        <div style={{
+          background: "#fff",
+          borderRadius: 12,
+          padding: "16px 18px",
+          boxShadow: "0 8px 24px -12px rgba(23,22,29,0.22)",
+          marginTop: 16,
+        }}>
+          {/* Q */}
+          <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
+            <div style={{
+              flexShrink: 0, width: 26, height: 26, borderRadius: "50%",
+              background: "#5b52e8", color: "#fff",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 10, fontWeight: 700,
+            }}>AI</div>
+            <p style={{
+              fontSize: 13, color: "#17161d", lineHeight: 1.55, margin: 0,
+              fontFamily: "'Inter', sans-serif",
+            }}>
               {qText}
-              {phase === "q" && <Cursor />}
-            </div>
+              {phase === "q" && (
+                <span style={{
+                  display: "inline-block", width: 2, height: "0.8em",
+                  background: "#5b52e8", marginLeft: 2, verticalAlign: "middle",
+                  animation: "nbcursor 1s step-end infinite",
+                }} />
+              )}
+            </p>
           </div>
 
+          {/* Thinking dots */}
           {phase === "thinking" && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex gap-2.5 items-center mb-4"
-            >
-              <div className="shrink-0 w-[30px] h-[30px] rounded-full bg-[#fff3ee] flex items-center justify-center text-[11px] font-bold text-orange-600">
-                Y
-              </div>
-              <div className="flex gap-1.5 px-3.5 py-2.5">
-                {[0, 1, 2].map((i) => (
-                  <span
-                    key={i}
-                    className="w-1.5 h-1.5 rounded-full bg-violet-300 animate-dotbounce"
-                    style={{ animationDelay: `${i * 0.18}s` }}
-                  />
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#fdf1c7", flexShrink: 0 }} />
+              <div style={{ display: "flex", gap: 5, padding: "6px 0" }}>
+                {[0,1,2].map(i => (
+                  <span key={i} style={{
+                    width: 6, height: 6, borderRadius: "50%", background: "#a9822b",
+                    animation: `nbdot 1s ease-in-out ${i * 0.18}s infinite`,
+                  }} />
                 ))}
               </div>
-            </motion.div>
+            </div>
           )}
 
+          {/* Answer */}
           {phase === "a" && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex gap-2.5 mb-4"
-            >
-              <div className="shrink-0 w-[30px] h-[30px] rounded-full bg-[#fff3ee] flex items-center justify-center text-[11px] font-bold text-orange-600">
-                Y
-              </div>
-              <div className="flex-1 min-w-0 bg-[#fffaf7] border border-[#ffe4d0] rounded-2xl rounded-bl-sm px-3.5 py-2.5 text-[13px] leading-relaxed text-[#3a2e28]">
+            <div style={{ display: "flex", gap: 10 }}>
+              <div style={{
+                flexShrink: 0, width: 26, height: 26, borderRadius: "50%",
+                background: "#fdf1c7", color: "#a9822b",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 10, fontWeight: 700,
+              }}>Y</div>
+              <p style={{
+                fontSize: 13, color: "#3a3620", lineHeight: 1.6, margin: 0,
+                fontFamily: "'Inter', sans-serif",
+              }}>
                 {aText}
-                {aText.length < A.length && <Cursor orange />}
+                {aText.length < A.length && (
+                  <span style={{
+                    display: "inline-block", width: 2, height: "0.8em",
+                    background: "#a9822b", marginLeft: 2, verticalAlign: "middle",
+                    animation: "nbcursor 1s step-end infinite",
+                  }} />
+                )}
+              </p>
+            </div>
+          )}
+
+          {/* Score bar */}
+          {scoreVisible && (
+            <motion.div
+              initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+              style={{
+                marginTop: 12, padding: "10px 12px",
+                background: "#eafaf0", borderRadius: 8,
+                border: "1px solid #b6e8c8",
+                display: "flex", alignItems: "center", gap: 10,
+              }}
+            >
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: "#1f9d55", marginBottom: 5 }}>
+                  Technical depth · Structured
+                </div>
+                <div style={{ height: 4, borderRadius: 99, background: "#d1f5e0", overflow: "hidden" }}>
+                  <motion.div
+                    initial={{ width: 0 }} animate={{ width: "91%" }}
+                    transition={{ duration: 1.1, delay: 0.3, ease: "easeOut" }}
+                    style={{ height: "100%", borderRadius: 99, background: "#1f9d55" }}
+                  />
+                </div>
               </div>
+              <span style={{ fontSize: 18, fontWeight: 800, color: "#1f9d55" }}>91</span>
             </motion.div>
           )}
         </div>
-
-        {scoreVisible && (
-          <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mx-4 mb-4 px-3.5 py-3 rounded-[14px] border border-green-200 bg-gradient-to-br from-green-50 to-green-100 flex items-center gap-2.5"
-          >
-            <div className="flex-1 min-w-0">
-              <div className="text-[11px] font-semibold text-green-700 mb-1.5">
-                Technical depth · Structured reasoning
-              </div>
-              <div className="h-[5px] rounded-full bg-green-100 overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: "91%" }}
-                  transition={{ duration: 1.2, delay: 0.3, ease: "easeOut" }}
-                  className="h-full rounded-full bg-gradient-to-r from-green-500 to-green-400"
-                />
-              </div>
-            </div>
-            <div className="text-[22px] font-bold text-green-600 leading-none shrink-0">91</div>
-          </motion.div>
-        )}
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 3.5 }}
-        className="absolute -bottom-[18px] right-5 z-20 flex items-center gap-2 rounded-full bg-white px-3.5 py-[7px] border border-border-soft shadow-[0_4px_20px_rgba(0,0,0,0.10)]"
-      >
-        <span className="text-[13px]">🏆</span>
-        <span className="text-xs font-semibold text-[#4a4a6a] whitespace-nowrap">Top 8% answer</span>
-      </motion.div>
-    </motion.div>
+      {/* Sticky note */}
+      <div style={{
+        position: "absolute", top: 24, right: -16,
+        width: 148, background: "#c9c2f2",
+        padding: "18px 16px 20px", borderRadius: 3,
+        boxShadow: "0 10px 28px -10px rgba(23,22,29,0.22)",
+        transform: "rotate(4deg)",
+        fontFamily: "'Caveat', cursive",
+        fontSize: 17, color: "#2c2660", lineHeight: 1.35,
+      }}>
+        Be clear.<br/>Be concise.<br/>Be you.
+        <div style={{ width: 52, borderTop: "1.5px solid #2c2660", marginTop: 10 }} />
+        <span style={{ position: "absolute", bottom: 14, right: 14, fontSize: 13 }}>♥</span>
+      </div>
+
+      {/* Yellow sticky */}
+      <div style={{
+        position: "absolute", bottom: -12, right: -8,
+        width: 140, background: "#fdf1c7",
+        padding: "14px 16px 16px", borderRadius: 3,
+        boxShadow: "0 8px 24px -10px rgba(23,22,29,0.2)",
+        transform: "rotate(-2.5deg)",
+      }}>
+        <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: 14, color: "#3a3620", marginBottom: 8, display: "flex", alignItems: "center", gap: 5 }}>
+          Notes 💡
+        </div>
+        <ul style={{ margin: 0, paddingLeft: 16, fontFamily: "'Caveat', cursive", fontSize: 15, color: "#3a3620", lineHeight: 2 }}>
+          <li>Key points</li>
+          <li>Approach</li>
+          <li>Trade-offs</li>
+        </ul>
+      </div>
+
+      <style>{`
+        @keyframes nbcursor { 0%,100%{opacity:1} 50%{opacity:0} }
+        @keyframes nbdot { 0%,100%{transform:translateY(0);opacity:.5} 50%{transform:translateY(-4px);opacity:1} }
+      `}</style>
+    </div>
   );
 }
 
+// ── Hero ──────────────────────────────────────────────────────────────────────
 export default function Hero() {
   return (
-    // FIX 1: min-h-screen → min-h-[100dvh] with min-h-screen fallback for
-    // older browsers. 100vh on mobile doesn't account for the address bar
-    // showing/hiding, which causes content jumping and the "zoom" feeling.
-    // FIX 2: added overflow-x-hidden as a hard safeguard against any
-    // child element forcing horizontal scroll on narrow viewports.
-    <section className="relative overflow-hidden overflow-x-hidden bg-surface min-h-screen min-h-[100dvh] w-full">
-      <div
-        aria-hidden
-        className="absolute -top-[120px] -right-[100px] w-[700px] h-[700px] rounded-full opacity-80 bg-[radial-gradient(circle,#ede9ff_0%,transparent_65%)]"
-      />
-      <div
-        aria-hidden
-        className="absolute -bottom-20 -left-[60px] w-[500px] h-[500px] rounded-full opacity-90 bg-[radial-gradient(circle,#fff7ed_0%,transparent_65%)]"
-      />
-      <div
-        aria-hidden
-        className="absolute inset-0 pointer-events-none opacity-[0.18] bg-[radial-gradient(circle,#c4b5fd_1px,transparent_1px)] bg-size-[32px_32px]"
-      />
-      {/* FIX 3: diagonal clip-path panel hidden below md — on narrow screens
-          this decorative element was contributing to layout instability.
-          It only ever made visual sense in the 2-column desktop layout
-          anyway, since the 1-column mobile layout stacks content vertically. */}
-      <div
-        aria-hidden
-        className="hidden md:block absolute inset-0 top-0 left-[38%] right-0 bottom-0 z-0 bg-gradient-to-br from-[#f5f3ff] to-surface"
-        style={{ clipPath: "polygon(8% 0%, 100% 0%, 100% 100%, 0% 100%)" }}
-      />
+    <section style={{ background: "#fdfcfb", minHeight: "100vh", overflow: "hidden" }}>
 
-      {/* FIX 4: px-8 → px-5 sm:px-8 — 32px of padding on each side ate too
-          much width on small phones (375px - 64px padding = 311px usable). */}
-      <div className="relative z-10 max-w-[1200px] mx-auto px-5 sm:px-8 pt-[clamp(90px,14vw,160px)] pb-[clamp(56px,8vw,100px)]">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-[clamp(32px,6vw,96px)] items-center">
-          <div className="min-w-0">
-            <motion.div
-              initial={{ opacity: 0, y: -12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45 }}
-              className="inline-flex items-center gap-2 rounded-full px-4 py-[7px] mb-7 bg-brand-bg border border-violet-200"
-            >
-              <span className="w-[7px] h-[7px] rounded-full bg-violet-500 shadow-[0_0_8px_#8b5cf6]" />
-              <span className="text-xs font-semibold text-brand tracking-[0.07em] uppercase">
-                AI-Powered Interview Training
-              </span>
-            </motion.div>
+      {/* Nav-like top padding offset */}
+      <div style={{ maxWidth: 1160, margin: "0 auto", padding: "clamp(64px,10vw,120px) 56px clamp(48px,6vw,80px)" }}>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "clamp(32px,6vw,80px)",
+          alignItems: "center",
+        }} className="hero-grid">
 
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.08, ease }}
-              className="text-[clamp(2.2rem,5.5vw,4.2rem)] font-extrabold leading-[1.06] tracking-tight text-ink mb-6 break-words"
-            >
-              Walk in
-              <br />
-              <span className="text-gradient-brand">confident.</span>
-              <br />
-              Answer brilliantly.
-            </motion.h1>
-
+          {/* LEFT */}
+          <div>
+            {/* Handwritten eyebrow */}
             <motion.p
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.18 }}
-              className="text-[clamp(0.95rem,1.8vw,1.1rem)] leading-relaxed text-body max-w-[420px] mb-9"
+              initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              style={{
+                fontFamily: "'Caveat', cursive",
+                fontSize: 19, color: "#1f9d55",
+                margin: "0 0 14px", fontWeight: 600,
+              }}
             >
-              Practice real questions, get instant AI feedback, and build the calm
-              confidence that shows up when it matters most.
+              — for the night before your interview
             </motion.p>
 
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.28 }}
-              className="flex flex-wrap gap-3 mb-12"
+            {/* Headline */}
+            <motion.h1
+              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65, delay: 0.07 }}
+              style={{
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontWeight: 800, fontSize: "clamp(2.2rem, 5vw, 3.6rem)",
+                lineHeight: 1.1, letterSpacing: "-0.015em",
+                color: "#17161d", margin: "0 0 20px",
+              }}
             >
-              <Link to="/dashboard">
+              Practice the answer<br />
+              you'll{" "}
+              <span style={{
+                color: "#5b52e8",
+                textDecoration: "underline",
+                textDecorationThickness: 3,
+                textUnderlineOffset: 6,
+                textDecorationColor: "#b9b4f6",
+              }}>
+                actually
+              </span>{" "}give.
+            </motion.h1>
+
+            {/* Subtext */}
+            <motion.p
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, delay: 0.16 }}
+              style={{
+                fontFamily: "'Inter', sans-serif",
+                fontSize: "clamp(0.95rem, 1.6vw, 1.05rem)",
+                lineHeight: 1.65, color: "#6f6d7a",
+                maxWidth: 440, margin: "0 0 30px",
+              }}
+            >
+              AI-powered mock interviews, smart feedback, and simple progress
+              tracking — everything you need to ace your next interview.
+            </motion.p>
+
+            {/* CTAs */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.24 }}
+              style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 28 }}
+            >
+              <Link to="/dashboard" style={{ textDecoration: "none" }}>
                 <motion.span
-                  whileHover={{ scale: 1.04, boxShadow: "0 10px 32px rgba(107,92,246,0.35)" }}
-                  whileTap={{ scale: 0.97 }}
-                  className="inline-block px-7 py-3.5 rounded-2xl bg-gradient-brand text-white font-bold text-sm cursor-pointer shadow-brand tracking-wide"
+                  whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 8,
+                    background: "#5b52e8", color: "#fff",
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    fontWeight: 700, fontSize: 15,
+                    padding: "13px 22px", borderRadius: 10, border: "none",
+                    cursor: "pointer", letterSpacing: "0.01em",
+                  }}
                 >
-                  Start Practicing Free →
+                  Start practicing →
                 </motion.span>
               </Link>
               <motion.a
                 href="#features"
-                whileHover={{ scale: 1.03, backgroundColor: "#f0edff" }}
+                whileHover={{ scale: 1.02, background: "#f0edfc" }}
                 whileTap={{ scale: 0.97 }}
-                className="inline-block px-6 py-3.5 rounded-2xl bg-white text-[#4a4a6a] border border-[#e4e0f5] font-semibold text-sm cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                  background: "#fff", color: "#17161d",
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  fontWeight: 700, fontSize: 15,
+                  padding: "13px 22px", borderRadius: 10,
+                  border: "1.5px solid #ecebf0", cursor: "pointer",
+                  textDecoration: "none",
+                }}
               >
-                See how it works
+                See how it works →
               </motion.a>
             </motion.div>
 
-            {/* FIX 5: STATS row — pr-6 mr-6 fixed-px gaps were too wide on
-                small phones, squeezing 3 stat blocks into very little space.
-                Switched to responsive gap with flex-wrap fallback so stats
-                can wrap to 2 lines gracefully on very narrow screens instead
-                of being crushed. */}
+            {/* Social proof */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="flex flex-wrap border-t border-border-soft pt-7 gap-x-4 gap-y-4"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              transition={{ delay: 0.45 }}
+              style={{ display: "flex", alignItems: "center", gap: 12 }}
             >
-              {STATS.map((s, i) => (
-                <motion.div
-                  key={s.l}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.55 + i * 0.07 }}
-                  className={`flex-1 min-w-[90px] ${i < 2 ? "sm:pr-6 sm:mr-6 sm:border-r border-border-soft" : ""}`}
-                >
-                  <div className="text-[clamp(1.15rem,2.2vw,1.7rem)] font-extrabold text-ink tracking-tight">
-                    {s.v}
-                  </div>
-                  <div className="text-xs text-brand-muted mt-0.5">{s.l}</div>
-                </motion.div>
-              ))}
+              <div style={{ display: "flex" }}>
+                {[
+                  { l: "R", bg: "#5b52e8" },
+                  { l: "A", bg: "#1f9d55" },
+                  { l: "K", bg: "#e08a3c" },
+                ].map((a, i) => (
+                  <div key={i} style={{
+                    width: 34, height: 34, borderRadius: "50%",
+                    background: a.bg, border: "2px solid #fdfcfb",
+                    marginLeft: i === 0 ? 0 : -10,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 12, fontWeight: 700, color: "#fff",
+                  }}>{a.l}</div>
+                ))}
+              </div>
+              <div>
+                <div style={{ color: "#f5b942", fontSize: 14, letterSpacing: 1 }}>★★★★★</div>
+                <div style={{ fontSize: 13, color: "#6f6d7a", marginTop: 2, fontFamily: "'Inter', sans-serif" }}>
+                  Loved by 10,000+ learners
+                </div>
+              </div>
             </motion.div>
           </div>
 
-          {/* FIX 6: justify-center → w-full + px on mobile so the card has
-              breathing room instead of touching screen edges when squeezed. */}
-          <div className="flex justify-center w-full pb-6">
-            <AICard />
-          </div>
+          {/* RIGHT — Notebook */}
+          <motion.div
+            initial={{ opacity: 0, x: 32 }} animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.75, delay: 0.3 }}
+            style={{ display: "flex", justifyContent: "center", paddingBottom: 32 }}
+          >
+            <NotebookCard />
+          </motion.div>
         </div>
 
+        {/* Feature strip */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.55 }}
-          className="mt-[56px] sm:mt-[72px] pt-8 border-t border-border-soft"
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7, duration: 0.5 }}
+          style={{
+            marginTop: "clamp(40px, 6vw, 72px)",
+            border: "1px solid #ecebf0",
+            borderRadius: 16,
+            display: "grid",
+            gridTemplateColumns: "repeat(4,1fr)",
+          }}
+          className="feature-strip"
         >
-          <div className="text-[11px] font-semibold tracking-[0.14em] uppercase text-[#b0aac8] mb-3.5">
-            Popular interview tracks
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {TRACKS.map((t, i) => (
-              <motion.button
-                key={t}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.85 + i * 0.04 }}
-                whileHover={{ scale: 1.04, backgroundColor: "#f0edff", borderColor: "#c4b5fd" }}
-                whileTap={{ scale: 0.97 }}
-                className="px-4 py-2 rounded-xl bg-[#f5f3fb] text-body border border-[#e8e4f2] text-[13px] font-medium cursor-pointer transition-colors"
-              >
-                {t}
-              </motion.button>
+          {[
+            { icon: "🎤", label: "AI Mock Interviews", desc: "Realistic, role-based with instant feedback.", bg: "#eeecfd" },
+            { icon: "💬", label: "Smart Feedback",     desc: "Detailed suggestions to improve every answer.", bg: "#eafaf0" },
+            { icon: "📝", label: "Notes & Reflections",desc: "Save key learnings and revisit your best answers.", bg: "#fdf1c7" },
+            { icon: "📈", label: "Track Progress",     desc: "Visualize improvements and stay consistent.", bg: "#e6f1fd" },
+          ].map((f, i, arr) => (
+            <div key={f.label} style={{
+              padding: "28px 24px",
+              borderRight: i < arr.length - 1 ? "1px solid #ecebf0" : "none",
+            }}>
+              <div style={{
+                width: 44, height: 44, borderRadius: 12, background: f.bg,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 20, marginBottom: 14,
+              }}>
+                {f.icon}
+              </div>
+              <h4 style={{
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontWeight: 700, fontSize: 15, margin: "0 0 6px", color: "#17161d",
+              }}>{f.label}</h4>
+              <p style={{
+                fontFamily: "'Inter', sans-serif",
+                fontSize: 13.5, color: "#6f6d7a", lineHeight: 1.5, margin: 0,
+              }}>{f.desc}</p>
+            </div>
+          ))}
+        </motion.div>
+
+        {/* Trusted by */}
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          transition={{ delay: 0.85 }}
+          style={{ textAlign: "center", padding: "52px 0 20px" }}
+        >
+          <p style={{
+            fontFamily: "'Inter', sans-serif",
+            fontSize: 13.5, color: "#6f6d7a", marginBottom: 24,
+          }}>
+            Trusted by learners from
+          </p>
+          <div style={{
+            display: "flex", justifyContent: "center",
+            gap: "clamp(24px,4vw,52px)", flexWrap: "wrap",
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontWeight: 700, fontSize: 18, color: "#8b899a",
+          }}>
+            {["Google","Microsoft","Amazon","TCS","Infosys","Adobe"].map(c => (
+              <span key={c}>{c}</span>
             ))}
           </div>
         </motion.div>
       </div>
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&family=Caveat:wght@600;700&display=swap');
+        @media (max-width: 860px) {
+          .hero-grid { grid-template-columns: 1fr !important; }
+          .feature-strip { grid-template-columns: 1fr 1fr !important; }
+          .feature-strip > div { border-right: none !important; border-bottom: 1px solid #ecebf0; }
+          .feature-strip > div:last-child { border-bottom: none; }
+        }
+        @media (max-width: 520px) {
+          .feature-strip { grid-template-columns: 1fr !important; }
+          div[style*="padding: \"clamp(64px"] { padding-left: 22px !important; padding-right: 22px !important; }
+        }
+      `}</style>
     </section>
   );
 }
