@@ -451,6 +451,31 @@ export default function Hero() {
           ))}
         </motion.div>
 
+        {/* Trusted by */}
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          transition={{ delay: 0.85 }}
+          style={{ textAlign: "center", padding: "52px 0 20px" }}
+        >
+          <p style={{
+            fontFamily: "'Inter', sans-serif",
+            fontSize: 13.5, color: "#6f6d7a", marginBottom: 24,
+          }}>
+            Trusted by learners from
+          </p>
+          <div style={{
+            display: "flex", justifyContent: "center",
+            gap: "clamp(24px,4vw,52px)", flexWrap: "wrap",
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontWeight: 700, fontSize: 18, color: "#8b899a",
+          }}>
+            {["Google","Microsoft","Amazon","TCS","Infosys","Adobe"].map(c => (
+              <span key={c}>{c}</span>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&family=Caveat:wght@600;700&display=swap');
         @media (max-width: 860px) {

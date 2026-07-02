@@ -1,6 +1,6 @@
 import Hero from "../components/Hero";
 import Feature from "../components/Feature";
-import Trusted from "../components/Trusted";
+//import Trusted from "../components/Trusted";
 import Stats from "../components/Stats";
 import PopularTopics from "../components/PopularTopics";
 import AIPreview from "../components/AIPreview";
@@ -12,7 +12,7 @@ function Home() {
       <Hero />
       <Feature />
       <Trusted />
-      <Stats />
+      <Stats /> 
       <PopularTopics />
       <AIPreview />
       <CTA />
