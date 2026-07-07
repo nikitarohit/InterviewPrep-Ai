@@ -1,4 +1,7 @@
-const BASE = "/api";
+const isProd = window.location.hostname !== "localhost";
+const BASE = isProd
+  ? "https://interviewprep-ai-ylxt.onrender.com/api"
+  : "/api";
 
 function getToken() {
   return localStorage.getItem("token");
