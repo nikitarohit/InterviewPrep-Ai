@@ -59,9 +59,15 @@ export function isGeminiConfigured() {
   return Boolean(env.geminiApiKey && genAI);
 }
 
-// ── Language-aware prompt ─────────────────────────────────────────────────────
 export function buildStudyPackPrompt(topic, language = "Python") {
-  return `You are an expert interview coach. For the topic "${topic}", generate a JSON response with exactly this structure.
+  return `You are an expert interview coach helping candidates prepare for job interviews.
+
+IMPORTANT RULE: First, check if "${topic}" is a valid, meaningful interview preparation topic (e.g. Java, System Design, Marketing Strategy, Financial Analysis, HR Management, React, DSA, SQL, OOP, etc.).
+
+If "${topic}" is NOT a valid topic — for example it is a greeting ("hello", "hey", "hi"), a random word, gibberish, a single letter, or anything unrelated to interviews or learning — respond with ONLY this JSON:
+{"error": "invalid_topic", "message": "Please enter a valid interview topic like 'Java Collections', 'System Design', or 'Marketing Strategy'."}
+
+If it IS a valid topic, generate a JSON response with exactly this structure.
 IMPORTANT: All code examples must be written in ${language}.
 {
   "theory": "2-3 paragraph explanation of the topic for interview prep",
@@ -123,7 +129,6 @@ export async function generateText(prompt) {
   }
 }
 
-// ── Now accepts optional language param ───────────────────────────────────────
 export async function generateInterviewContent(topic, language = "Python") {
   if (!isGeminiConfigured()) {
     console.warn("[Gemini] Not configured — returning mock data");
@@ -133,8 +138,19 @@ export async function generateInterviewContent(topic, language = "Python") {
     const prompt = buildStudyPackPrompt(topic, language);
     const text = await generateText(prompt);
     const pack = parseStudyPack(text);
+
+    // If Gemini says topic is invalid — throw clean error
+    if (pack.error === "invalid_topic") {
+      throw new Error(pack.message);
+    }
+
     return { ...pack, _source: "gemini" };
   } catch (err) {
+    // Don't fallback to mock for invalid topic errors
+    if (err.message.includes("valid interview topic") || err.message.includes("invalid_topic")) {
+      throw err;
+    }
+
     const isOverload =
       err.message.includes("temporarily unavailable") ||
       err.message.includes("503") ||
