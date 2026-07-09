@@ -5,6 +5,10 @@ import { api } from "../utils/api";
 
 const ease = [0.22, 1, 0.36, 1];
 
+function getSavedLanguage() {
+  try { return localStorage.getItem("preferredLanguage") || "Python"; } catch { return "Python"; }
+}
+
 function SectionHeader({ icon, label, accent, accentBg, count }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
@@ -71,7 +75,7 @@ function CodingCard({ problem, selected, onToggle }) {
             <div style={{ background: "#1e1b2e", borderTop: "1px solid #312d4b", padding: "14px 18px" }}>
               <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
                 {["#ff6b6b","#ffd93d","#6bcb77"].map((c) => <div key={c} style={{ width: 9, height: 9, borderRadius: "50%", background: c, opacity: 0.8 }} />)}
-                <span style={{ fontSize: 10, color: "#6b6b9b", marginLeft: 6 }}>solution.js</span>
+                <span style={{ fontSize: 10, color: "#6b6b9b", marginLeft: 6 }}>solution</span>
               </div>
               <pre style={{ margin: 0, fontSize: 12.5, lineHeight: 1.8, color: "#c4b5fd", fontFamily: "monospace", overflowX: "auto", whiteSpace: "pre-wrap" }}>{problem.code}</pre>
             </div>
@@ -146,7 +150,7 @@ function SaveBanner({ selectedCount, saving, saveSuccess, onSave, onSelectAll, o
             <span style={{ fontSize: 22 }}>✅</span>
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: 14, fontWeight: 700, color: "#15803d", margin: 0 }}>Saved to Notes!</p>
-              <p style={{ fontSize: 12, color: "#16a34a", margin: "2px 0 0" }}>Notes page and dashboard stats have been updated.</p>
+              <p style={{ fontSize: 12, color: "#16a34a", margin: "2px 0 0" }}>Notes page and dashboard stats updated.</p>
             </div>
             <a href="/notes" style={{ fontSize: 12.5, fontWeight: 600, color: "#15803d", background: "#dcfce7", padding: "7px 14px", borderRadius: 10, textDecoration: "none", border: "1px solid #86efac" }}>View Notes →</a>
           </>
@@ -154,7 +158,7 @@ function SaveBanner({ selectedCount, saving, saveSuccess, onSave, onSelectAll, o
           <>
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: 13, fontWeight: 700, color: "#fff", margin: 0 }}>
-                {selectedCount === 0 ? "Select questions or theory to save as notes" : `${selectedCount} item${selectedCount !== 1 ? "s" : ""} selected`}
+                {selectedCount === 0 ? "Select questions or theory to save" : `${selectedCount} item${selectedCount !== 1 ? "s" : ""} selected`}
               </p>
               <p style={{ fontSize: 11, color: "#9b8fb5", margin: "2px 0 0" }}>Check any item · click Save to Notes</p>
             </div>
@@ -162,7 +166,7 @@ function SaveBanner({ selectedCount, saving, saveSuccess, onSave, onSelectAll, o
             {selectedCount > 0 && <button onClick={onClearAll} style={{ fontSize: 12, fontWeight: 600, color: "#9b8fb5", background: "transparent", border: "1px solid #3d3960", borderRadius: 9, padding: "6px 12px", cursor: "pointer" }}>Clear</button>}
             <motion.button whileHover={selectedCount > 0 ? { scale: 1.04 } : {}} whileTap={selectedCount > 0 ? { scale: 0.97 } : {}}
               onClick={onSave} disabled={saving || selectedCount === 0}
-              style={{ padding: "9px 20px", borderRadius: 12, border: "none", background: selectedCount === 0 ? "#2d2a4a" : "linear-gradient(135deg, #6b5cf6, #a78bfa)", color: selectedCount === 0 ? "#5a5780" : "#fff", fontWeight: 700, fontSize: 13, cursor: selectedCount === 0 ? "default" : "pointer", transition: "all 0.2s", boxShadow: selectedCount > 0 ? "0 3px 12px rgba(107,92,246,0.35)" : "none", minWidth: 130, flexShrink: 0 }}>
+              style={{ padding: "9px 20px", borderRadius: 12, border: "none", background: selectedCount === 0 ? "#2d2a4a" : "linear-gradient(135deg, #6b5cf6, #a78bfa)", color: selectedCount === 0 ? "#5a5780" : "#fff", fontWeight: 700, fontSize: 13, cursor: selectedCount === 0 ? "default" : "pointer", transition: "all 0.2s", minWidth: 130, flexShrink: 0 }}>
               {saving ? "Saving…" : "💾 Save to Notes"}
             </motion.button>
           </>
@@ -197,13 +201,17 @@ export default function Result() {
 
   const topic = data.topic || "Your practice pack";
   const content = data.content || data.pack || data;
-  const source = data.source || "unknown";
   const allInterviewQs = content.interviewQuestions || [];
   const allHrQs = content.hrQuestions || [];
   const allCodingPs = content.codingProblems || [];
   const roadmapSteps = content.roadmap || content.learningPath || [];
 
-  const totalSelectableCount = allInterviewQs.length + allHrQs.length + allCodingPs.length + (content.theory ? 1 : 0);
+  // Hide coding section for non-technical users
+  const lang = getSavedLanguage();
+  const isNonTechnical = lang === "None (Non-technical)";
+  const showCoding = !isNonTechnical && allCodingPs.length > 0;
+
+  const totalSelectableCount = allInterviewQs.length + allHrQs.length + (showCoding ? allCodingPs.length : 0) + (content.theory ? 1 : 0);
 
   const toggleId = (id) => setSelectedIds((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
@@ -211,7 +219,7 @@ export default function Result() {
     setSelectedIds(new Set([
       ...allInterviewQs.map((q) => `iq-${q.id}`),
       ...allHrQs.map((q) => `hr-${q.id}`),
-      ...allCodingPs.map((p) => `cp-${p.id}`),
+      ...(showCoding ? allCodingPs.map((p) => `cp-${p.id}`) : []),
     ]));
     setTheorySelected(true);
   };
@@ -230,7 +238,6 @@ export default function Result() {
     setSaving(true);
     try {
       const saveOps = [];
-
       if (theorySelected && content.theory) {
         saveOps.push(api.createNote({ title: `Theory: ${topic}`, category: "Theories", excerpt: content.theory.substring(0, 150), content: content.theory, topic }));
       }
@@ -242,21 +249,20 @@ export default function Result() {
         if (!selectedIds.has(`hr-${q.id}`)) continue;
         saveOps.push(api.createNote({ title: q.question, category: "HR Questions", excerpt: (q.answer || q.tip || q.question).substring(0, 150), content: [q.answer, q.tip].filter(Boolean).join("\n\n"), topic }));
       }
-      for (const p of allCodingPs) {
-        if (!selectedIds.has(`cp-${p.id}`)) continue;
-        saveOps.push(api.createNote({ title: p.title, category: "Coding Notes", excerpt: (p.description || p.title).substring(0, 150), content: [p.description, p.code ? `// Solution\n${p.code}` : ""].filter(Boolean).join("\n\n"), topic }));
+      if (showCoding) {
+        for (const p of allCodingPs) {
+          if (!selectedIds.has(`cp-${p.id}`)) continue;
+          saveOps.push(api.createNote({ title: p.title, category: "Coding Notes", excerpt: (p.description || p.title).substring(0, 150), content: [p.description, p.code ? `// Solution\n${p.code}` : ""].filter(Boolean).join("\n\n"), topic }));
+        }
       }
-
       await Promise.all(saveOps);
-
       const interviewSaved = allInterviewQs.filter((q) => selectedIds.has(`iq-${q.id}`)).length;
-      const codingSaved = allCodingPs.filter((p) => selectedIds.has(`cp-${p.id}`)).length;
+      const codingSaved = showCoding ? allCodingPs.filter((p) => selectedIds.has(`cp-${p.id}`)).length : 0;
       const progressOps = [];
       if (interviewSaved > 0) progressOps.push(api.updateProgress({ type: "questions", count: interviewSaved }).catch(() => {}));
       if (codingSaved > 0) progressOps.push(api.updateProgress({ type: "coding", count: codingSaved }).catch(() => {}));
       progressOps.push(api.addActivity({ text: `Saved ${saveOps.length} note${saveOps.length !== 1 ? "s" : ""} from "${topic}"`, label: "Notes", accent: "#6b5cf6", accentBg: "#f0edff" }).catch(() => {}));
       await Promise.all(progressOps);
-
       setSaveSuccess(true);
       clearAll();
       setTimeout(() => setSaveSuccess(false), 5000);
@@ -268,11 +274,11 @@ export default function Result() {
   };
 
   const defaultRoadmap = roadmapSteps.length > 0 ? roadmapSteps : [
-    { title: `Understand the basics of ${topic}`, description: "Build a solid foundation before moving forward.", resources: ["Docs", "MDN", "YouTube"] },
-    { title: "Practice core concepts", description: "Work through the interview questions and MCQs above.", resources: ["LeetCode", "HackerRank"] },
-    { title: "Build a small project", description: "Apply your knowledge in a real mini-project.", resources: ["GitHub", "CodePen"] },
-    { title: "Review system design aspects", description: "Understand how this concept scales in production.", resources: ["System Design Primer"] },
-    { title: "Mock interview practice", description: "Simulate a real interview using the HR questions above.", resources: ["Pramp", "Interviewing.io"] },
+    { title: `Understand the basics of ${topic}`, description: "Build a solid foundation before moving forward.", resources: ["Docs", "YouTube"] },
+    { title: "Practice core concepts", description: "Work through the interview questions and MCQs above.", resources: ["Flashcards", "Notes"] },
+    { title: "Apply in a real scenario", description: "Use this knowledge in a project, case study, or presentation.", resources: ["GitHub", "Portfolio"] },
+    { title: "Review common interview angles", description: "Understand how this topic appears in interviews for your field.", resources: ["Glassdoor", "LinkedIn"] },
+    { title: "Mock interview practice", description: "Simulate a real interview using the HR questions above.", resources: ["Pramp", "Peer practice"] },
   ];
 
   const currentSelected = selectedIds.size + (theorySelected ? 1 : 0);
@@ -281,14 +287,16 @@ export default function Result() {
     <div style={{ background: "#fafaf8", minHeight: "100vh", padding: "40px 0 120px" }}>
       <div style={{ maxWidth: 860, margin: "0 auto", padding: "0 24px" }}>
 
+        {/* Page header — no "Source" shown */}
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} style={{ marginBottom: 28 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
             <div style={{ padding: "5px 14px", borderRadius: 99, background: "#f0edff", border: "1px solid #ddd6fe", fontSize: 12, fontWeight: 600, color: "#6b5cf6" }}>{topic}</div>
-            <div style={{ marginLeft: 8, padding: "4px 10px", borderRadius: 12, background: "#f3f4f6", color: "#374151", fontSize: 12 }}>Source: {source}</div>
             <button onClick={() => navigate("/dashboard")} style={{ marginLeft: "auto", fontSize: 12.5, color: "#9b8fb5", background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}>← Back to Dashboard</button>
           </div>
           <h1 style={{ fontSize: "clamp(1.6rem,3.5vw,2.4rem)", fontWeight: 800, color: "#1a1a2e", letterSpacing: "-0.03em", margin: "0 0 8px" }}>Your Interview Prep Results</h1>
-          <p style={{ fontSize: 15, color: "#7a7a9a", margin: 0 }}>6 sections · AI-generated for "{topic}" · Check items and save to notes</p>
+          <p style={{ fontSize: 15, color: "#7a7a9a", margin: 0 }}>
+            AI-generated for "{topic}" · Check items and save to notes
+          </p>
         </motion.div>
 
         {/* Theory */}
@@ -331,8 +339,8 @@ export default function Result() {
           </motion.section>
         )}
 
-        {/* Coding */}
-        {allCodingPs.length > 0 && (
+        {/* Coding — hidden for non-technical users */}
+        {showCoding && (
           <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.34, ease }}
             style={{ background: "#fff", borderRadius: 22, padding: 24, border: "1px solid #ece8f5", boxShadow: "0 2px 8px rgba(0,0,0,0.04)", marginBottom: 16 }}>
             <SectionHeader label="Coding Problems" accent="#ea580c" accentBg="#fff7ed" count={`${allCodingPs.length} problems`}
@@ -360,7 +368,7 @@ export default function Result() {
           style={{ background: "#fff", borderRadius: 22, padding: 24, border: "1px solid #ece8f5", boxShadow: "0 2px 8px rgba(0,0,0,0.04)", marginBottom: 16 }}>
           <SectionHeader label={`Learning Roadmap · ${topic}`} accent="#f59e0b" accentBg="#fffbeb" count={`${defaultRoadmap.length} steps`}
             icon={<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="4" cy="4" r="2" stroke="#f59e0b" strokeWidth="1.4" /><circle cx="14" cy="9" r="2" stroke="#f59e0b" strokeWidth="1.4" /><circle cx="4" cy="14" r="2" stroke="#f59e0b" strokeWidth="1.4" /><path d="M6 4h4a2 2 0 012 2v1M12 11v1a2 2 0 01-2 2H6" stroke="#f59e0b" strokeWidth="1.3" strokeLinecap="round" /></svg>} />
-          <p style={{ fontSize: 13, color: "#9b8fb5", margin: "0 0 16px" }}>Click each step to mark it complete. Track your progress as you go.</p>
+          <p style={{ fontSize: 13, color: "#9b8fb5", margin: "0 0 16px" }}>Click each step to mark it complete.</p>
           {defaultRoadmap.map((step, i) => <RoadmapCard key={i} step={step} index={i} />)}
         </motion.section>
 
