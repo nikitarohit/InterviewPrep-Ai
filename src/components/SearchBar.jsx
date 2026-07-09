@@ -202,18 +202,22 @@ export default function SearchBar() {
   }
 
   function handleGenerate(topicOverride) {
-    const topic = (topicOverride || query).trim();
-    if (!topic) return;
-
-    const savedLang = getSavedLanguage();
-    if (savedLang) {
-      // Already have preference — generate directly
-      doGenerate(topic, savedLang);
-    } else {
-      // First time — show language picker
-      setShowLangPicker(true);
-    }
+  const topic = (topicOverride || query).trim();
+  if (!topic) return;
+  
+  // ← ADD THIS
+  if (topic.length < 3) {
+    setError("Please enter a more specific topic (e.g. 'Java Collections', 'System Design')");
+    return;
   }
+
+  const savedLang = getSavedLanguage();
+  if (savedLang) {
+    doGenerate(topic, savedLang);
+  } else {
+    setShowLangPicker(true);
+  }
+}
 
   return (
     <>
